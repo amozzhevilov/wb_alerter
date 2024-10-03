@@ -1,4 +1,6 @@
-import requests, json, os
+import requests
+import json
+import os
 from datetime import datetime, timezone, timedelta
 from time import sleep
 
@@ -10,7 +12,7 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 # фильтр по складам
-warehouses = '''
+WAREHOUSES = '''
 [
     {
         "warehouse": "Екатеринбург - Испытателей 14г|Екатеринбург - Перспективный 12/2|СЦ Екатеринбург 2 (Альпинистов)",
@@ -29,23 +31,23 @@ warehouses = '''
 
 def telegram_bot_sendtext(bot_message):
 
-   bot_token = TELEGRAM_BOT_TOKEN
-   bot_chatID = TELEGRAM_CHAT_ID
-   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + bot_message
+    bot_token = TELEGRAM_BOT_TOKEN
+    bot_chat_id = TELEGRAM_CHAT_ID
+    send_text = 'https://api.telegram.org/bot' + bot_token + \
+        '/sendMessage?chat_id=' + bot_chat_id + \
+        '&parse_mode=Markdown&text=' + bot_message
 
-   response = requests.get(send_text)
+    response = requests.get(send_text)
 
-   return response.json()
-
+    return response.json()
 
 def send_message(result):
-    msg=''
+    msg=f''
 
     for i in result:
         msg += 'Склад: {}, дата: {}, коэф. {}.\n'.format(i['warehouseName'], datetime.fromisoformat(i['date']).strftime('%Y-%m-%d'), i['coefficient'])
 
     telegram_bot_sendtext(msg)
-
 
 def get_warehouse (result, warehouse, coefficients):
     
@@ -71,7 +73,7 @@ def get_warehouse (result, warehouse, coefficients):
                 result.append(coefficient)
 
 # преобразуем фильтр по складам в JSON
-warehouses = json.loads(warehouses)
+warehouses = json.loads(WAREHOUSES)
 
 # пустой лист для сохранения предыдущего состояния между циклами
 old_list = []
