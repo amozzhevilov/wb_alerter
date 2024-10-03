@@ -45,12 +45,14 @@ def send_message(result):
     msg=f''
 
     for i in result:
-        msg += 'Склад: {}, дата: {}, коэф. {}.\n'.format(i['warehouseName'], datetime.fromisoformat(i['date']).strftime('%Y-%m-%d'), i['coefficient'])
-
+        msg += 'Склад: {}, дата: {}, коэф. {}.\n'.format( \
+            i['warehouseName'], \
+            datetime.fromisoformat(i['date']).strftime('%Y-%m-%d'), \
+            i['coefficient'] \
+            )
     telegram_bot_sendtext(msg)
 
 def get_warehouse (result, warehouse, coefficients):
-    
     for coefficient in coefficients: 
         
         # коэф -1 - склад не работает
@@ -82,7 +84,6 @@ old_list = []
 wb = wb.wb(WB_TOKEN)
 
 while True:
-
     # извлекаем коэффициенты по складам
     x = wb.get_coefficients()
 
@@ -92,12 +93,12 @@ while True:
     else:
         sleep(10)
         continue
-    
+
     # в лист result будем добавлять склады, которые нам подходят
     result = []
     for warehouse in warehouses:
         get_warehouse(result, warehouse, coefficients)
-                    
+
     newlist = sorted(result, key=lambda d: d['warehouseName'])
 
     # оставляем склады, которые добавились на новой итерации 
