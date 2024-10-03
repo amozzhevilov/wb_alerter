@@ -4,39 +4,12 @@ from time import sleep
 
 import wb
 
-WB_TOKEN=os.getenv('WB_TOKEN')
-TELEGRAM_BOT_TOKEN=os.getenv('TELEGRAM_BOT_TOKEN')
-TELEGRAM_CHAT_ID=os.getenv('TELEGRAM_CHAT_ID')
+# извлекаем токены из env
+WB_TOKEN = os.getenv('WB_TOKEN')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-def telegram_bot_sendtext(bot_message):
-
-   bot_token = TELEGRAM_BOT_TOKEN
-   bot_chatID = TELEGRAM_CHAT_ID
-   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + bot_message
-
-   response = requests.get(send_text)
-
-   return response.json()
-
-def get_warehouse (result, warehouse, coefficients):
-    
-    for coefficient in coefficients: 
-        
-        if coefficient['coefficient'] == -1:
-            continue
-
-        if coefficient['boxTypeName'] not in warehouse['boxTypeName'].split('|'):
-            continue
-
-        if warehouse['warehouse'] != "*" and \
-            coefficient['warehouseName'] not in warehouse['warehouse'].split('|'):
-            continue
-
-        if coefficient['coefficient'] <= warehouse['min_coefficient'] and \
-            datetime.fromisoformat(coefficient['date']) - datetime.now(timezone.utc) >= timedelta(days=warehouse['delay']) and \
-            coefficient not in result:
-                result.append(coefficient)
-
+# фильтр по складам
 warehouses = '''
 [
     {
@@ -53,45 +26,89 @@ warehouses = '''
     }   
 ]
 '''
-warehouses = json.loads(warehouses)
 
-old_list = []
+def telegram_bot_sendtext(bot_message):
 
-wb = wb.wb(WB_TOKEN)
+   bot_token = TELEGRAM_BOT_TOKEN
+   bot_chatID = TELEGRAM_CHAT_ID
+   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + bot_message
 
-while True:
+   response = requests.get(send_text)
 
-    x = wb.get_coefficients()
+   return response.json()
 
-    if x != -1:
-        coefficients = json.loads(x.text)
-    else:
-        sleep(10)
-        continue
 
-    result = []
-
-    for warehouse in warehouses:
-        get_warehouse(result, warehouse, coefficients)
-                    
-    newlist = sorted(result, key=lambda d: d['warehouseName'])
-
-    result = []
-
-    for i in newlist:
-        if i not in old_list:
-            result.append(i)
-
+def send_message(result):
     msg=''
 
     for i in result:
         msg += 'Склад: {}, дата: {}, коэф. {}.\n'.format(i['warehouseName'], datetime.fromisoformat(i['date']).strftime('%Y-%m-%d'), i['coefficient'])
 
-    # print(msg)
-    # exit(0)
-
     telegram_bot_sendtext(msg)
 
+
+def get_warehouse (result, warehouse, coefficients):
+    
+    for coefficient in coefficients: 
+        
+        # коэф -1 - склад не работает
+        if coefficient['coefficient'] == -1:
+            continue
+        
+        # проверяем, подходит ли нам тип упаковки
+        if coefficient['boxTypeName'] not in warehouse['boxTypeName'].split('|'):
+            continue
+
+        # проверяем, подходит ли нам склад. * - подходит любой склад
+        if warehouse['warehouse'] != "*" and \
+            coefficient['warehouseName'] not in warehouse['warehouse'].split('|'):
+            continue
+
+        # проверяем коэф. склада, дату приемки и не добавляли ли мы склад ранее.
+        if coefficient['coefficient'] <= warehouse['min_coefficient'] and \
+            datetime.fromisoformat(coefficient['date']) - datetime.now(timezone.utc) >= timedelta(days=warehouse['delay']) and \
+            coefficient not in result:
+                result.append(coefficient)
+
+# преобразуем фильтр по складам в JSON
+warehouses = json.loads(warehouses)
+
+# пустой лист для сохранения предыдущего состояния между циклами
+old_list = []
+
+# инициализируем класс для работы с WB API
+wb = wb.wb(WB_TOKEN)
+
+while True:
+
+    # извлекаем коэффициенты по складам
+    x = wb.get_coefficients()
+
+    # если извлечение завершилось ошибкой, ждём 10 секунд и запускаем цикл по новой
+    if x != -1:
+        coefficients = json.loads(x.text)
+    else:
+        sleep(10)
+        continue
+    
+    # в лист result будем добавлять склады, которые нам подходят
+    result = []
+    for warehouse in warehouses:
+        get_warehouse(result, warehouse, coefficients)
+                    
+    newlist = sorted(result, key=lambda d: d['warehouseName'])
+
+    # оставляем склады, которые добавились на новой итерации 
+    result = []
+    for i in newlist:
+        if i not in old_list:
+            result.append(i)
+
+    # отправляем сообщение пользователю
+    send_message(result)
+
+    # запоминаем состояние для следующего цикла
     old_list = newlist
 
+    # спим
     sleep(60)
