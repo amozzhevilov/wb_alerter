@@ -1,15 +1,20 @@
-import requests
+'''Send a message to telegram about the availability of free warehouses on WB'''
+
 import json
 import os
 from datetime import datetime, timezone, timedelta
 from time import sleep
 
+import requests
 import wb
 
 # извлекаем токены из env
 WB_TOKEN = os.getenv('WB_TOKEN')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+
+# инициализируем класс для работы с WB API
+wb = wb.wb(WB_TOKEN)
 
 # фильтр по складам
 WAREHOUSES = '''
@@ -77,14 +82,12 @@ def get_warehouse (result, warehouse, coefficients):
                 result.append(coefficient)
 
 def main():
+    '''Main function'''
     # преобразуем фильтр по складам в JSON
     warehouses = json.loads(WAREHOUSES)
 
     # пустой лист для сохранения предыдущего состояния между циклами
     previous_list = []
-
-    # инициализируем класс для работы с WB API
-    wb = wb.wb(WB_TOKEN)
 
     while True:
         # извлекаем коэффициенты по складам
@@ -104,7 +107,7 @@ def main():
 
         current_list = sorted(result, key=lambda d: d['warehouseName'])
 
-        # оставляем склады, которые добавились на новой итерации 
+        # оставляем склады, которые добавились на новой итерации
         result = []
         for i in current_list:
             if i not in previous_list:
@@ -119,5 +122,5 @@ def main():
         # спим
         sleep(60)
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     main()
