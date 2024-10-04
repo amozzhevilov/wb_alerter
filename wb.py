@@ -2,6 +2,7 @@
 import requests
 
 class wb:
+    '''Class for WB API'''
 
     def __init__(self, token) -> None:
         self.token = token # TOKEN доступ до API
@@ -12,7 +13,7 @@ class wb:
         headers = {'Authorization':self.token}
 
         try:
-            x = requests.get(url, headers=headers)
+            x = requests.get(url, headers=headers, timeout=10)
         except:
             print("Failed to get request")
             return(-1)
@@ -25,7 +26,7 @@ class wb:
         headers = {'Authorization':self.token}
 
         try:
-            x = requests.get(url, headers=headers)
+            x = requests.get(url, headers=headers, timeout=10)
         except:
             print("Failed to get request")
             return(-1)

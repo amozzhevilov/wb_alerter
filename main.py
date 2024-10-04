@@ -42,20 +42,18 @@ def telegram_bot_sendtext(bot_message):
         '/sendMessage?chat_id=' + bot_chat_id + \
         '&parse_mode=Markdown&text=' + bot_message
 
-    response = requests.get(send_text)
+    response = requests.get(send_text, timeout=10)
 
     return response.json()
 
 def send_message(result):
     '''Convert relust list to user message'''
-    msg=f''
+    msg=''
 
     for i in result:
-        msg += 'Склад: {}, дата: {}, коэф. {}.\n'.format( \
-            i['warehouseName'], \
-            datetime.fromisoformat(i['date']).strftime('%Y-%m-%d'), \
-            i['coefficient'] \
-            )
+        msg += f'Склад: {i['warehouseName']}, \
+            дата: {datetime.fromisoformat(i['date']).strftime('%Y-%m-%d')}, \
+            коэф. {i['coefficient']}.\n'
     telegram_bot_sendtext(msg)
 
 def get_timedelta_to_now(date):
