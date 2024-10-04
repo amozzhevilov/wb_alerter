@@ -1,4 +1,4 @@
-'''Send a message to telegram about the availability of free warehouses on WB'''
+'''Send message to telegram about the availability of free warehouses on WB'''
 
 import json
 import os
@@ -58,6 +58,10 @@ def send_message(result):
             )
     telegram_bot_sendtext(msg)
 
+def get_timedelta_to_now(date):
+    '''Return timedelta from date to now'''
+    return datetime.fromisoformat(date) - datetime.now(timezone.utc)
+
 def get_warehouse (result, warehouse, coefficients):
     '''Find warehouse by condition'''
     for coefficient in coefficients:
@@ -77,9 +81,9 @@ def get_warehouse (result, warehouse, coefficients):
 
         # проверяем коэф. склада, дату приемки и не добавляли ли мы склад ранее.
         if coefficient['coefficient'] <= warehouse['min_coefficient'] and \
-            datetime.fromisoformat(coefficient['date']) - datetime.now(timezone.utc) >= timedelta(days=warehouse['delay']) and \
+            get_timedelta_to_now(coefficient['date']) >= timedelta(days=warehouse['delay']) and \
             coefficient not in result:
-                result.append(coefficient)
+            result.append(coefficient)
 
 def main():
     '''Main function'''

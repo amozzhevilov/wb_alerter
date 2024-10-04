@@ -1,5 +1,5 @@
+'''API for WB'''
 import requests
-from time import sleep
 
 class wb:
 
@@ -7,7 +7,7 @@ class wb:
         self.token = token # TOKEN доступ до API
 
     def get_coefficients (self):
-        
+        '''Get warehouse coefficients'''
         url = 'https://supplies-api.wildberries.ru/api/v1/acceptance/coefficients'
         headers = {'Authorization':self.token}
 
@@ -16,11 +16,11 @@ class wb:
         except:
             print("Failed to get request")
             return(-1)
-        else:
-            return(x)
-        
+
+        return(x)
+
     def get_warehouses (self):
-        
+        '''Get list of warehouse'''
         url = 'https://supplies-api.wildberries.ru/api/v1/warehouses'
         headers = {'Authorization':self.token}
 
@@ -29,7 +29,5 @@ class wb:
         except:
             print("Failed to get request")
             return(-1)
-        else:
-            return(x)
-        
-            
+
+        return(x)
