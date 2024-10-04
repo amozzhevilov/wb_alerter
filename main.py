@@ -14,7 +14,7 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 # инициализируем класс для работы с WB API
-wb = wb.wb(WB_TOKEN)
+wb = wb.WB(WB_TOKEN)
 
 # фильтр по складам
 WAREHOUSES = '''
@@ -48,12 +48,12 @@ def telegram_bot_sendtext(bot_message):
 
 def send_message(result):
     '''Convert relust list to user message'''
-    msg=''
+    msg=""
 
     for i in result:
-        msg += f'Склад: {i['warehouseName']}, \
+        msg += f"Склад: {i['warehouseName']}, \
             дата: {datetime.fromisoformat(i['date']).strftime('%Y-%m-%d')}, \
-            коэф. {i['coefficient']}.\n'
+            коэф. {i['coefficient']}.\n"
     telegram_bot_sendtext(msg)
 
 def get_timedelta_to_now(date):

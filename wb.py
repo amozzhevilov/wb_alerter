@@ -1,7 +1,7 @@
 '''API for WB'''
 import requests
 
-class wb:
+class WB:
     '''Class for WB API'''
 
     def __init__(self, token) -> None:
@@ -14,11 +14,11 @@ class wb:
 
         try:
             x = requests.get(url, headers=headers, timeout=10)
-        except:
-            print("Failed to get request")
-            return(-1)
+        except requests.exceptions.RequestException as err:
+            print("OOps: Something error",err)
+            return -1
 
-        return(x)
+        return x
 
     def get_warehouses (self):
         '''Get list of warehouse'''
@@ -27,8 +27,8 @@ class wb:
 
         try:
             x = requests.get(url, headers=headers, timeout=10)
-        except:
-            print("Failed to get request")
-            return(-1)
+        except requests.exceptions.RequestException as err:
+            print("OOps: Something error",err)
+            return -1
 
-        return(x)
+        return x
