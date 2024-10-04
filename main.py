@@ -30,7 +30,7 @@ WAREHOUSES = '''
 '''
 
 def telegram_bot_sendtext(bot_message):
-
+    '''Send message to telegram.'''
     bot_token = TELEGRAM_BOT_TOKEN
     bot_chat_id = TELEGRAM_CHAT_ID
     send_text = 'https://api.telegram.org/bot' + bot_token + \
@@ -42,6 +42,7 @@ def telegram_bot_sendtext(bot_message):
     return response.json()
 
 def send_message(result):
+    '''Convert relust list to user message'''
     msg=f''
 
     for i in result:
@@ -53,12 +54,13 @@ def send_message(result):
     telegram_bot_sendtext(msg)
 
 def get_warehouse (result, warehouse, coefficients):
-    for coefficient in coefficients: 
-        
+    '''Find warehouse by condition'''
+    for coefficient in coefficients:
+
         # коэф -1 - склад не работает
         if coefficient['coefficient'] == -1:
             continue
-        
+
         # проверяем, подходит ли нам тип упаковки
         if coefficient['boxTypeName'] not in warehouse['boxTypeName'].split('|'):
             continue
@@ -74,44 +76,48 @@ def get_warehouse (result, warehouse, coefficients):
             coefficient not in result:
                 result.append(coefficient)
 
-# преобразуем фильтр по складам в JSON
-warehouses = json.loads(WAREHOUSES)
+def main():
+    # преобразуем фильтр по складам в JSON
+    warehouses = json.loads(WAREHOUSES)
 
-# пустой лист для сохранения предыдущего состояния между циклами
-old_list = []
+    # пустой лист для сохранения предыдущего состояния между циклами
+    previous_list = []
 
-# инициализируем класс для работы с WB API
-wb = wb.wb(WB_TOKEN)
+    # инициализируем класс для работы с WB API
+    wb = wb.wb(WB_TOKEN)
 
-while True:
-    # извлекаем коэффициенты по складам
-    x = wb.get_coefficients()
+    while True:
+        # извлекаем коэффициенты по складам
+        x = wb.get_coefficients()
 
-    # если извлечение завершилось ошибкой, ждём 10 секунд и запускаем цикл по новой
-    if x != -1:
-        coefficients = json.loads(x.text)
-    else:
-        sleep(10)
-        continue
+        # если извлечение завершилось ошибкой, ждём 10 секунд и запускаем цикл по новой
+        if x != -1:
+            coefficients = json.loads(x.text)
+        else:
+            sleep(10)
+            continue
 
-    # в лист result будем добавлять склады, которые нам подходят
-    result = []
-    for warehouse in warehouses:
-        get_warehouse(result, warehouse, coefficients)
+        # в лист result будем добавлять склады, которые нам подходят
+        result = []
+        for warehouse in warehouses:
+            get_warehouse(result, warehouse, coefficients)
 
-    newlist = sorted(result, key=lambda d: d['warehouseName'])
+        current_list = sorted(result, key=lambda d: d['warehouseName'])
 
-    # оставляем склады, которые добавились на новой итерации 
-    result = []
-    for i in newlist:
-        if i not in old_list:
-            result.append(i)
+        # оставляем склады, которые добавились на новой итерации 
+        result = []
+        for i in current_list:
+            if i not in previous_list:
+                result.append(i)
 
-    # отправляем сообщение пользователю
-    send_message(result)
+        # отправляем сообщение пользователю
+        send_message(result)
 
-    # запоминаем состояние для следующего цикла
-    old_list = newlist
+        # запоминаем состояние для следующего цикла
+        previous_list = current_list
 
-    # спим
-    sleep(60)
+        # спим
+        sleep(60)
+
+if __name__ == "__main__": 
+    main()
