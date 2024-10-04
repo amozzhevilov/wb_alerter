@@ -51,9 +51,9 @@ def send_message(result):
     msg=""
 
     for i in result:
-        msg += f"Склад: {i['warehouseName']}, \
-            дата: {datetime.fromisoformat(i['date']).strftime('%Y-%m-%d')}, \
-            коэф. {i['coefficient']}.\n"
+        msg += f"Склад: {i['warehouseName']}, "
+        msg += f"дата: {datetime.fromisoformat(i['date']).strftime('%Y-%m-%d')}, "
+        msg += f"коэф. {i['coefficient']}.\n"
     telegram_bot_sendtext(msg)
 
 def get_timedelta_to_now(date):
