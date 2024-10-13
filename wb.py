@@ -12,6 +12,9 @@ class WB:
         url = 'https://supplies-api.wildberries.ru/api/v1/acceptance/coefficients'
         headers = {'Authorization':self.token}
 
+        # Как лучше переделать? Request вынести во внутренний метод класса?
+        # Как анализировать результат и как написать цепочку try except?
+
         try:
             x = requests.get(url, headers=headers, timeout=10)
         except requests.exceptions.RequestException as err:

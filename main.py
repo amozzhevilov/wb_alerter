@@ -16,7 +16,7 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 # инициализируем класс для работы с WB API
 wb = wb.WB(WB_TOKEN)
 
-# фильтр по складам
+# фильтр по складам, добавил отдельный файл yaml
 WAREHOUSES = '''
 [
     {
@@ -62,6 +62,9 @@ def get_timedelta_to_now(date):
 
 def get_warehouse (result, warehouse, coefficients):
     '''Find warehouse by condition'''
+
+    # Мне не нравится данный алгоритм сравнения количеством проходов.
+
     for coefficient in coefficients:
 
         # коэф -1 - склад не работает
