@@ -5,6 +5,7 @@ CONNECT_TIMEOUT = 10
 SUPPLIES_API = 'https://supplies-api.wildberries.ru/api/v1'
 
 class MyError(Exception):
+    '''Class for exception'''
     pass
 
 class WB:
@@ -31,7 +32,7 @@ class WB:
                 raise MyError(f'Get wrong status code: {response.status_code}')
 
         except requests.exceptions.RequestException as err:
-            raise MyError(f'Request got wrong: {err}')
+            raise MyError(f'Request got wrong: {err}') from err
 
         return data
 

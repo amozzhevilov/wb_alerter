@@ -1,7 +1,7 @@
 '''Send message to telegram about the availability of free warehouses on WB'''
 
-import json
 import os
+import sys
 from datetime import datetime, timezone, timedelta
 from time import sleep
 
@@ -19,6 +19,7 @@ CONFIG_FILE = 'config.yaml'
 wb = wb.WB(WB_TOKEN)
 
 class MyError(Exception):
+    '''Class for exception'''
     pass
 
 def telegram_bot_sendtext(bot_message):
@@ -77,14 +78,14 @@ def main():
     # Загружаем конфигурацию из CONFIG_FILE
     try:
     # Open file in read-only mode
-        with open(CONFIG_FILE, 'r') as file:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as file:
             warehouses = yaml.safe_load(file)
     except IOError as e:
         print("An error occurred:", e)
-        exit(e.errno)
+        sys.exit(e.errno)
     except yaml.YAMLError as e:
         print("An error occurred:", e)
-        exit(-1)
+        sys.exit(-1)
 
     # пустой лист для сохранения предыдущего состояния между циклами
     previous_list = []
