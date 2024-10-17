@@ -7,7 +7,7 @@ from time import sleep
 
 import requests
 import yaml
-import wb
+from wb import WB, MyError
 
 # извлекаем токены из env
 WB_TOKEN = os.getenv('WB_TOKEN')
@@ -16,11 +16,7 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 CONFIG_FILE = 'config.yaml'
 
 # инициализируем класс для работы с WB API
-wb = wb.WB(WB_TOKEN)
-
-class MyError(Exception):
-    '''Class for exception'''
-    # pass
+wb = WB(WB_TOKEN)
 
 def telegram_bot_sendtext(bot_message):
     '''Send message to telegram.'''
