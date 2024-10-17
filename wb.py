@@ -1,6 +1,12 @@
 '''API for WB'''
 import requests
 
+CONNECT_TIMEOUT = 10
+SUPPLIES_API = 'https://supplies-api.wildberries.ru/api/v1'
+
+class MyError(Exception):
+    pass
+
 class WB:
     '''Class for WB API'''
 
@@ -9,27 +15,33 @@ class WB:
 
     def get_coefficients (self):
         '''Get warehouse coefficients'''
-        url = 'https://supplies-api.wildberries.ru/api/v1/acceptance/coefficients'
+        url = f'{SUPPLIES_API}/acceptance/coefficients'
         headers = {'Authorization':self.token}
-
-        # Как лучше переделать? Request вынести во внутренний метод класса?
-        # Как анализировать результат и как написать цепочку try except?
+        data = ''
 
         try:
-            x = requests.get(url, headers=headers, timeout=10)
-        except requests.exceptions.RequestException as err:
-            print("OOps: Something error",err)
-            return -1
+            #  Выполняем запрос
+            response = requests.get(url, headers=headers, timeout=CONNECT_TIMEOUT)
 
-        return x
+            # Обработка ответа
+            if response.status_code == 200:
+                data = response.json()
+            else:
+                print(f'Get wrong status code: {response.status_code}')
+                raise MyError(f'Get wrong status code: {response.status_code}')
+
+        except requests.exceptions.RequestException as err:
+            raise MyError(f'Request got wrong: {err}')
+
+        return data
 
     def get_warehouses (self):
         '''Get list of warehouse'''
-        url = 'https://supplies-api.wildberries.ru/api/v1/warehouses'
+        url = f'{SUPPLIES_API}/warehouses'
         headers = {'Authorization':self.token}
 
         try:
-            x = requests.get(url, headers=headers, timeout=10)
+            x = requests.get(url, headers=headers, timeout=CONNECT_TIMEOUT)
         except requests.exceptions.RequestException as err:
             print("OOps: Something error",err)
             return -1
