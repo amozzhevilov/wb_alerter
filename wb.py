@@ -6,7 +6,7 @@ SUPPLIES_API = 'https://supplies-api.wildberries.ru/api/v1'
 
 class MyError(Exception):
     '''Class for exception'''
-    pass
+    # pass
 
 class WB:
     '''Class for WB API'''

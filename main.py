@@ -20,7 +20,7 @@ wb = wb.WB(WB_TOKEN)
 
 class MyError(Exception):
     '''Class for exception'''
-    pass
+    # pass
 
 def telegram_bot_sendtext(bot_message):
     '''Send message to telegram.'''
