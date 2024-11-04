@@ -1,38 +1,22 @@
 '''Send message to telegram about the availability of free warehouses on WB'''
 
-import json
 import os
+import sys
 from datetime import datetime, timezone, timedelta
 from time import sleep
 
 import requests
-import wb
+import yaml
+from wb import WB, MyError
 
 # извлекаем токены из env
 WB_TOKEN = os.getenv('WB_TOKEN')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+CONFIG_FILE = 'config.yaml'
 
 # инициализируем класс для работы с WB API
-wb = wb.WB(WB_TOKEN)
-
-# фильтр по складам
-WAREHOUSES = '''
-[
-    {
-        "warehouse": "Екатеринбург - Испытателей 14г|Екатеринбург - Перспективный 12/2|СЦ Екатеринбург 2 (Альпинистов)",
-        "delay": 0,
-        "min_coefficient": 5,
-        "boxTypeName": "Короба"
-    } ,
-    {
-        "warehouse": "*",
-        "delay": 7,
-        "min_coefficient": 5,
-        "boxTypeName": "Короба"
-    }   
-]
-'''
+wb = WB(WB_TOKEN)
 
 def telegram_bot_sendtext(bot_message):
     '''Send message to telegram.'''
@@ -62,6 +46,7 @@ def get_timedelta_to_now(date):
 
 def get_warehouse (result, warehouse, coefficients):
     '''Find warehouse by condition'''
+
     for coefficient in coefficients:
 
         # коэф -1 - склад не работает
@@ -69,36 +54,43 @@ def get_warehouse (result, warehouse, coefficients):
             continue
 
         # проверяем, подходит ли нам тип упаковки
-        if coefficient['boxTypeName'] not in warehouse['boxTypeName'].split('|'):
+        if coefficient['boxTypeName'] not in warehouse['boxTypeName']:
             continue
 
         # проверяем, подходит ли нам склад. * - подходит любой склад
-        if warehouse['warehouse'] != "*" and \
-            coefficient['warehouseName'] not in warehouse['warehouse'].split('|'):
+        if 'warehouse' in warehouse and \
+            coefficient['warehouseName'] not in warehouse['warehouse']:
             continue
 
         # проверяем коэф. склада, дату приемки и не добавляли ли мы склад ранее.
-        if coefficient['coefficient'] <= warehouse['min_coefficient'] and \
+        if coefficient['coefficient'] <= warehouse['max_coefficient'] and \
             get_timedelta_to_now(coefficient['date']) >= timedelta(days=warehouse['delay']) and \
             coefficient not in result:
             result.append(coefficient)
 
 def main():
     '''Main function'''
-    # преобразуем фильтр по складам в JSON
-    warehouses = json.loads(WAREHOUSES)
+
+    # Загружаем конфигурацию из CONFIG_FILE
+    try:
+    # Open file in read-only mode
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as file:
+            warehouses = yaml.safe_load(file)
+    except IOError as e:
+        print("An error occurred:", e)
+        sys.exit(e.errno)
+    except yaml.YAMLError as e:
+        print("An error occurred:", e)
+        sys.exit(-1)
 
     # пустой лист для сохранения предыдущего состояния между циклами
     previous_list = []
 
     while True:
-        # извлекаем коэффициенты по складам
-        x = wb.get_coefficients()
-
-        # если извлечение завершилось ошибкой, ждём 10 секунд и запускаем цикл по новой
-        if x != -1:
-            coefficients = json.loads(x.text)
-        else:
+        try:
+            # извлекаем коэффициенты по складам
+            coefficients = wb.get_coefficients()
+        except MyError:
             sleep(10)
             continue
 
