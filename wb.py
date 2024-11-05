@@ -43,8 +43,14 @@ class WB:
         headers = {'Authorization': self.token}
 
         try:
-            data = requests.get(url, headers=headers, timeout=CONNECT_TIMEOUT)
-        except requests.exceptions.RequestException:
-            return -1
+            response = requests.get(url, headers=headers, timeout=CONNECT_TIMEOUT)
+
+            # Обработка ответа
+            if response.status_code == 200:
+                data = response.json()
+            else:
+                raise MyError(f'Get wrong status code: {response.status_code}')
+        except requests.exceptions.RequestException as err:
+            raise MyError(f'Request got wrong: {err}') from err
 
         return data
