@@ -67,6 +67,3 @@ skip_glob = [".venv", "venv"]
 [tool.black]
 line-length = 119
 skip-string-normalization = true
-
-[tool.setuptools]
-py-modules = []
