@@ -5,8 +5,11 @@ requires-python = ">=3.10"
 
 dependencies = [
     "requests",
-    "pyyaml",
-    "telebot"
+    "telebot",
+    "psycopg2",
+    "fuzzywuzzy",
+    "python-Levenshtein",
+    "aiohttp"
 ]
 
 [project.optional-dependencies]
