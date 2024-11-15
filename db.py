@@ -1,3 +1,4 @@
+import logging
 import psycopg2
 
 
@@ -14,9 +15,14 @@ class DB:
     ) -> None:
         self.DATABASE_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
+    def __connect(self):
+        """Функция подключения к базе данных"""
+        connect = psycopg2.connect(self.DATABASE_URL)
+        return connect
+
     def update_user(self, user_id: int, name: str):
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 INSERT INTO users (id, name)
                 VALUES (%s, %s)
@@ -32,12 +38,11 @@ class DB:
                 )
                 conn.commit()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error update user {user_id}, {name}: {error}')
 
     def read_warehouses(self, regexp='.*'):
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 SELECT
                     name
@@ -49,8 +54,8 @@ class DB:
                 cur.execute(query, (regexp,))
                 rows = cur.fetchall()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error read warehouse, regexp {regexp}: {error}')
+
         result = []
         for row in rows:
             for element in row:
@@ -59,7 +64,7 @@ class DB:
 
     def read_accessible_warehouses(self, regexp='.*'):
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 SELECT
                     limits.type,
@@ -83,13 +88,13 @@ class DB:
                 cur.execute(query, (regexp,))
                 result = cur.fetchall()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error read accessible warehouse, regexp {regexp}: {error}')
+
         return result
 
     def read_warehouse_id(self, warehouse: str):
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 SELECT
                     id
@@ -101,16 +106,16 @@ class DB:
                 cur.execute(query, (warehouse,))
                 rows = cur.fetchone()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error read warehouse id, warehouse {warehouse}: {error}')
+
         if rows is None:
             # User does not exist
             return -1
         return rows[0]
 
-    def create_order(self, user_id: int, id: int, max_coef: int, delay: int, accept_type: str):
+    def create_order(self, user_id: int, warehouse_id: int, max_coef: int, delay: int, accept_type: str):
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 INSERT INTO orders (user_id, warehouse_id, max_coef, delay, type)
                 VALUES (%s, %s, %s, %s, %s)
@@ -119,7 +124,7 @@ class DB:
                     query,
                     (
                         user_id,  # ID пользователя
-                        id,  # ID склада
+                        warehouse_id,  # ID склада
                         max_coef,  # Макс коэф приемки
                         delay,  # Через сколько дней ищем слоты
                         accept_type,  # тип поставки
@@ -127,12 +132,11 @@ class DB:
                 )
                 conn.commit()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error create order: {error}')
 
     def delete_order(self, user_id: int, warehouse_id: int):
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 DELETE FROM
                     orders
@@ -149,14 +153,12 @@ class DB:
                 )
                 conn.commit()
         except psycopg2.Error as error:
-            print(error)
-            pass
-            # add logging submodule
+            logging.warning(f'Error delete order. User_id {user_id}, warehouse {warehouse_id}: {error}')
 
     def read_orders(self, user_id: int):
         result = []
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 SELECT
                     warehouses.name,
@@ -175,14 +177,14 @@ class DB:
                 cur.execute(query, (user_id,))
                 result = cur.fetchall()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error read orders for user_id {user_id}: {error}')
+
         return result
 
     def update_limits(self, coefficients):
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
-                query = "DELETE FROM limits;"
+            with self.__connect() as conn, conn.cursor() as cur:
+                query = 'DELETE FROM limits;'
                 cur.execute(query)
                 query = """
                 INSERT INTO limits (warehouse_id, date, coef, type)
@@ -200,43 +202,79 @@ class DB:
                     )
                 conn.commit()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error update limits: {error}')
+
         pass
 
     def read_all_slots(self):
         result = []
         try:
-            with psycopg2.connect(self.DATABASE_URL) as conn, conn.cursor() as cur:
+            with self.__connect() as conn, conn.cursor() as cur:
                 query = """
                 SELECT
-                	orders.user_id,
-                	warehouses.name,
-                	limits.date,
-                	limits.coef,
-                	limits.type
+                    orders.user_id,
+                    warehouses.name,
+                    limits.date,
+                    limits.coef,
+                    limits.type
                 FROM
-                	orders
+                    orders
                 JOIN
-                	limits
+                    limits
                 ON
-                	orders.warehouse_id = limits.warehouse_id
+                    orders.warehouse_id = limits.warehouse_id
                 JOIN
-                	warehouses
+                    warehouses
                 ON
-                	warehouses.id = limits.warehouse_id
+                    warehouses.id = limits.warehouse_id
                 WHERE
-                	limits.coef <= orders.max_coef
+                    limits.coef <= orders.max_coef
                     AND limits.coef <> -1
-                	AND limits.type = orders.type
-                	AND limits.date > CURRENT_DATE + orders.delay
+                    AND limits.type = orders.type
+                    AND limits.date > CURRENT_DATE + orders.delay
                 ORDER BY orders.user_id, warehouses.name, limits.date;
                 """
                 cur.execute(query)
                 result = cur.fetchall()
         except psycopg2.Error as error:
-            pass
-            # add logging submodule
+            logging.warning(f'Error read all slots: {error}')
+
+        return result
+
+    def find_slot(self, max_coef: int, delay: int, accept_type: str) -> tuple:
+        result = []
+        try:
+            with self.__connect() as conn, conn.cursor() as cur:
+                query = """
+                SELECT
+                    warehouses.name,
+                    limits.date,
+                    limits.coef
+                FROM
+                    limits
+                JOIN
+                    warehouses
+                ON
+                    warehouses.id = limits.warehouse_id
+                WHERE
+                    limits.type = %s
+                    AND limits.coef <> -1
+                    AND limits.coef < %s
+                    AND limits.date > CURRENT_DATE + %s
+                ORDER BY warehouses.name, limits.date;
+                """
+                cur.execute(
+                    query,
+                    (
+                        accept_type,
+                        max_coef,
+                        delay,
+                    ),
+                )
+                result = cur.fetchall()
+        except psycopg2.Error as error:
+            logging.warning(f'Error find slots: {error}')
+
         return result
 
 

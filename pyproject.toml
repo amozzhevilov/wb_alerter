@@ -52,7 +52,8 @@ ignore = [
     "E800", # Found commented out code
     "PT001", # use @pytest.fixture() over @pytest.fixture
     "W503",
-    "W504"
+    "W504",
+    "E203"
 ]
 exclude = [
     "venv",
