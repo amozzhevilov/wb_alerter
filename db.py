@@ -7,10 +7,10 @@ class DB:
 
     def __init__(
         self,
-        DB_NAME='wb_alerter',
-        DB_USER='wb_alerter',
-        DB_PASSWORD='wb_alerter',
-        DB_HOST='localhost',
+        DB_NAME='postgres',
+        DB_USER='postgres',
+        DB_PASSWORD='postgres',
+        DB_HOST='postgres',
         DB_PORT=5432,
     ) -> None:
         self.DATABASE_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
@@ -61,6 +61,29 @@ class DB:
             for element in row:
                 result.append(element)
         return result
+    
+    def create_warehouses(self, warehouses):
+        try:
+            with self.__connect() as conn, conn.cursor() as cur:
+                query = 'DELETE FROM limits;'
+                cur.execute(query)
+                query = """
+                INSERT INTO warehouses (id, name)
+                VALUES (%s, %s)
+                ON CONFLICT (id) DO UPDATE
+                SET name = excluded.name;
+                """
+                for warehouse in warehouses:
+                    cur.execute(
+                        query,
+                        (
+                            warehouse['ID'],  # ID склада
+                            warehouse['name'],  # Наименование склада
+                        ),
+                    )
+                conn.commit()
+        except psycopg2.Error as error:
+            logging.warning(f'Error update warehouses: {error}')
 
     def read_accessible_warehouses(self, regexp='.*'):
         try:

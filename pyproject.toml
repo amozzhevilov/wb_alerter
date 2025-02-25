@@ -6,7 +6,7 @@ requires-python = ">=3.10"
 dependencies = [
     "requests",
     "telebot",
-    "psycopg2",
+    "psycopg2-binary",
     "fuzzywuzzy",
     "python-Levenshtein",
     "aiohttp"

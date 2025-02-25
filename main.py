@@ -27,7 +27,7 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 wb = WB(WB_TOKEN)
 
 # инициализируем класс для работы с DB
-db = DB(DB_HOST='172.18.2.143')
+db = DB()
 
 # инициализируем модуль Telebot
 state_storage = StateMemoryStorage()
@@ -594,6 +594,9 @@ async def main():
     bot.add_custom_filter(asyncio_filters.TextMatchFilter())
     bot.setup_middleware(StateMiddleware(bot))
     asyncio.create_task(bot.polling())
+
+    # заполнение таблицы warehouses
+    db.create_warehouses(wb.get_warehouses())
 
     # пустой лист для сохранения предыдущего состояния между циклами
     previous_result = []
