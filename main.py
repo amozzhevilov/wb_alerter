@@ -9,7 +9,7 @@ from telebot.asyncio_storage import StateMemoryStorage
 from telebot.states import State, StatesGroup
 from telebot.states.asyncio.context import StateContext
 from telebot.states.asyncio.middleware import StateMiddleware
-from telebot.types import BotCommand, ReplyParameters
+from telebot.types import ReplyParameters
 from time import sleep
 
 from db import DB

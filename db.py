@@ -61,7 +61,7 @@ class DB:
             for element in row:
                 result.append(element)
         return result
-    
+
     def create_warehouses(self, warehouses):
         try:
             with self.__connect() as conn, conn.cursor() as cur:
