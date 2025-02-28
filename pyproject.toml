@@ -20,6 +20,7 @@ dev = [
     "pytest-cov",
     "pytest-mock",
     "pytest-order",
+    "pytest-dotenv",
 
     "black",
 
