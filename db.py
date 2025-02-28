@@ -65,8 +65,6 @@ class DB:
     def create_warehouses(self, warehouses):
         try:
             with self.__connect() as conn, conn.cursor() as cur:
-                query = 'DELETE FROM limits;'
-                cur.execute(query)
                 query = """
                 INSERT INTO warehouses (id, name)
                 VALUES (%s, %s)

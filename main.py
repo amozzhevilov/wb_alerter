@@ -21,7 +21,6 @@ MIN_SCORE_WAREHOUSE = 70
 # извлекаем токены из env
 WB_TOKEN = os.getenv('WB_TOKEN')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 # инициализируем класс для работы с WB API
 wb = WB(WB_TOKEN)
