@@ -22,11 +22,10 @@ services:
 
   wbalerter:
     container_name: wbalerter
-    image: cr.yandex/crp6qutme8n1opblnn2f/wb_alerter:docker-instance
+    image: cr.yandex/crp6qutme8n1opblnn2f/wb_alerter:latest
     environment:
       WB_TOKEN: ${WB_TOKEN}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
     depends_on:
       postgres:
         condition: service_healthy
