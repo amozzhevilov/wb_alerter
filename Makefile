@@ -16,4 +16,4 @@ lint:
 	black --check .
 
 test:
-	pytest
+	pytest -c tests/pytest.ini
