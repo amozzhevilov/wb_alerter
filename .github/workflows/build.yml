@@ -47,6 +47,7 @@ jobs:
         make lint
 
   build-and-push-image:
+    needs: pylint-scan
     runs-on: ubuntu-latest
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
