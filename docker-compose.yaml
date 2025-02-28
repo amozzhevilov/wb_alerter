@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:17.0
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_DB: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+      PGDATA: /data/postgres
+    volumes:
+      - db:/data/postgres
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+
+  wbalerter:
+    container_name: wbalerter
+    image: cr.yandex/crp6qutme8n1opblnn2f/wb_alerter:latest
+    environment:
+      WB_TOKEN: ${WB_TOKEN}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    restart: always
+
+volumes:
+  db:
